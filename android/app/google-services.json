@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "426250790066",
+    "project_id": "rentnsell-4a1df",
+    "storage_bucket": "rentnsell-4a1df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426250790066:android:2115bd9107398ea78595ab",
+        "android_client_info": {
+          "package_name": "com.rent.n.sell.car.home.property.chaniyacholi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "426250790066-1ru6358leit1redf16s8qevt64813me7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rent.n.sell.car.home.property.chaniyacholi",
+            "certificate_hash": "7b1c5a2f36f614a274ec9db17accbf46c6154fcf"
+          }
+        },
+        {
+          "client_id": "426250790066-vumiga6t86akrnmku71g8ug38oobog66.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxN0Woo1ilMFcOMZuhRIaNCNyjwcVFbo0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "426250790066-vumiga6t86akrnmku71g8ug38oobog66.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
