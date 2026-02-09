@@ -20,11 +20,11 @@ class ProfileCompletionHelper {
         return false;
       }
 
-      final response = await _profileApiService.getProfile(jwtToken: jwtToken);
-
-      if (response.success && response.data != null) {
-        return _profileApiService.isProfileComplete(response.data);
-      }
+      // final response = await _profileApiService.getProfile(jwtToken: jwtToken);
+      //
+      // if (response.success && response.data != null) {
+      //   return _profileApiService.isProfileComplete(response.data);
+      // }
 
       return false;
     } catch (e) {
@@ -42,77 +42,77 @@ class ProfileCompletionHelper {
       return false;
     }
 
-    final isComplete = await checkProfileCompletion();
-    if (!isComplete) {
-      _showCompleteProfileDialog(
-        actionName: actionName,
-        message:
-            incompleteMessage ??
-            'Please complete your profile to $actionName. This helps us provide a better experience for all users.',
-      );
-      return false;
-    }
+    // final isComplete = await checkProfileCompletion();
+    // if (!isComplete) {
+    //   _showCompleteProfileDialog(
+    //     actionName: actionName,
+    //     message:
+    //         incompleteMessage ??
+    //         'Please complete your profile to $actionName. This helps us provide a better experience for all users.',
+    //   );
+    //   return false;
+    // }
 
     return true;
   }
 
-  static void _showCompleteProfileDialog({
-    required String actionName,
-    required String message,
-  }) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.info_outline_rounded,
-              color: Color.fromRGBO(51, 11, 54, 1),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Complete Your Profile',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color.fromRGBO(51, 11, 54, 1),
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              Get.toNamed(AppRoutes.profileManage);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromRGBO(51, 11, 54, 1),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Complete Profile'),
-          ),
-        ],
-      ),
-      barrierDismissible: true,
-    );
-  }
+  // static void _showCompleteProfileDialog({
+  //   required String actionName,
+  //   required String message,
+  // }) {
+  //   Get.dialog(
+  //     AlertDialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  //       title: Row(
+  //         children: [
+  //           const Icon(
+  //             Icons.info_outline_rounded,
+  //             color: Color.fromRGBO(51, 11, 54, 1),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: Text(
+  //               'Complete Your Profile',
+  //               style: TextStyle(
+  //                 fontSize: 18,
+  //                 fontWeight: FontWeight.w600,
+  //                 color: Color.fromRGBO(51, 11, 54, 1),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       content: Text(
+  //         message,
+  //         style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Get.back(),
+  //           child: Text(
+  //             'Cancel',
+  //             style: TextStyle(color: Colors.grey.shade600),
+  //           ),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             Get.back();
+  //             // Get.toNamed(AppRoutes.profileManage);
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Color.fromRGBO(51, 11, 54, 1),
+  //             foregroundColor: Colors.white,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(12),
+  //             ),
+  //           ),
+  //           child: const Text('Complete Profile'),
+  //         ),
+  //       ],
+  //     ),
+  //     barrierDismissible: true,
+  //   );
+  // }
 
   static Future<ProfileGetResponseData?> getProfileData() async {
     try {

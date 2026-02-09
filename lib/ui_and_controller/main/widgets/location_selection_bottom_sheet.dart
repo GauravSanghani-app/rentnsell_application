@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../models/response/google_places_prediction_model.dart';
-import '../../../services/google_places_api_service.dart';
+import '../../../models/response/nominatim_search_response_model.dart';
+import '../../../services/nominatim_api_service.dart';
 import '../../../utils/theme_manager.dart';
 
 class LocationSelectionBottomSheet extends StatefulWidget {
-  final Function(String placeId, String description) onLocationSelected;
+  final Function(String placeId, String description, double latitude, double longitude) onLocationSelected;
 
   const LocationSelectionBottomSheet({
     super.key,
@@ -20,12 +20,12 @@ class LocationSelectionBottomSheet extends StatefulWidget {
 
 class _LocationSelectionBottomSheetState
     extends State<LocationSelectionBottomSheet> {
-  final GooglePlacesApiService _googlePlacesApiService =
-      GooglePlacesApiService();
+  final NominatimApiService _nominatimApiService = NominatimApiService();
   final TextEditingController _searchController = TextEditingController();
-  List<GooglePlacesPredictionModel> _predictions = [];
+  List<NominatimSearchResult> _searchResults = [];
   bool _isLoading = false;
   String _searchQuery = '';
+  String? _errorMessage;
   Timer? _searchDebounceTimer; // Debounce timer for search
 
   @override
@@ -48,15 +48,16 @@ class _LocationSelectionBottomSheetState
     final newQuery = _searchController.text;
     setState(() {
       _searchQuery = newQuery;
+      _errorMessage = null;
     });
 
     // Cancel previous debounce timer
     _searchDebounceTimer?.cancel();
 
-    // If search is empty, clear predictions
+    // If search is empty, clear results
     if (newQuery.trim().isEmpty) {
       setState(() {
-        _predictions = [];
+        _searchResults = [];
       });
       return;
     }
@@ -64,48 +65,55 @@ class _LocationSelectionBottomSheetState
     // Debounce search API call (wait 400ms after user stops typing)
     _searchDebounceTimer = Timer(const Duration(milliseconds: 400), () {
       if (mounted) {
-        _loadAutocompleteSuggestions();
+        _loadSearchResults();
       }
     });
   }
 
-  Future<void> _loadAutocompleteSuggestions() async {
+  Future<void> _loadSearchResults() async {
     if (!mounted) return;
 
     final query = _searchQuery.trim();
     if (query.isEmpty) {
       setState(() {
-        _predictions = [];
+        _searchResults = [];
       });
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-      final response = await _googlePlacesApiService.getAutocompleteSuggestions(
-        input: query,
+      final response = await _nominatimApiService.searchLocations(
+        query: query,
       );
 
       if (mounted) {
-        if (response.status == 'OK' && response.predictions.isNotEmpty) {
+        if (response.isSuccess && response.hasResults) {
           setState(() {
-            _predictions = response.predictions;
+            _searchResults = response.results;
+          });
+        } else if (response.status == 'ERROR') {
+          setState(() {
+            _searchResults = [];
+            _errorMessage = response.errorMessage ?? 'Search failed';
           });
         } else {
-          // Show error state or empty list
+          // Empty results
           setState(() {
-            _predictions = [];
+            _searchResults = [];
           });
         }
       }
     } catch (e) {
-      print('LocationSelectionBottomSheet: Error loading suggestions: $e');
+      print('LocationSelectionBottomSheet: Error loading search results: $e');
       if (mounted) {
         setState(() {
-          _predictions = [];
+          _searchResults = [];
+          _errorMessage = 'Failed to search locations';
         });
       }
     } finally {
@@ -177,7 +185,8 @@ class _LocationSelectionBottomSheetState
                           onPressed: () {
                             _searchController.clear();
                             setState(() {
-                              _predictions = [];
+                              _searchResults = [];
+                              _errorMessage = null;
                             });
                           },
                         )
@@ -192,7 +201,7 @@ class _LocationSelectionBottomSheetState
             ),
           ),
           const SizedBox(height: 16),
-          // Predictions List
+          // Search Results List
           Flexible(
             child: _isLoading
                 ? const Padding(
@@ -216,31 +225,57 @@ class _LocationSelectionBottomSheetState
                           ],
                         ),
                       )
-                    : _predictions.isEmpty
+                    : _errorMessage != null
                         ? Padding(
                             padding: const EdgeInsets.all(40),
                             child: Column(
                               children: [
-                                Icon(Icons.location_off_rounded,
-                                    size: 60, color: colorGrey),
+                                Icon(Icons.error_outline_rounded,
+                                    size: 60, color: Colors.red.shade300),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'No locations found',
-                                  style:
-                                      textStyleBody.copyWith(color: colorGrey),
+                                  _errorMessage!,
+                                  style: textStyleBody.copyWith(
+                                      color: Colors.red.shade400),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: _loadSearchResults,
+                                  child: Text(
+                                    'Retry',
+                                    style: textStyleBody.copyWith(
+                                        color: colorMainTheme),
+                                  ),
                                 ),
                               ],
                             ),
                           )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: _predictions.length,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemBuilder: (context, index) {
-                              final prediction = _predictions[index];
-                              return _buildPredictionItem(prediction);
-                            },
-                          ),
+                        : _searchResults.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.all(40),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.location_off_rounded,
+                                        size: 60, color: colorGrey),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No locations found',
+                                      style:
+                                          textStyleBody.copyWith(color: colorGrey),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: _searchResults.length,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                itemBuilder: (context, index) {
+                                  final result = _searchResults[index];
+                                  return _buildSearchResultItem(result);
+                                },
+                              ),
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
@@ -248,15 +283,20 @@ class _LocationSelectionBottomSheetState
     );
   }
 
-  Widget _buildPredictionItem(GooglePlacesPredictionModel prediction) {
-    final mainText = prediction.structuredFormatting?.mainText ??
-        prediction.description.split(',').first;
-    final secondaryText = prediction.structuredFormatting?.secondaryText ??
-        prediction.description.substring(mainText.length).trim();
+  Widget _buildSearchResultItem(NominatimSearchResult result) {
+    final mainText = result.mainText;
+    final secondaryText = result.secondaryText;
 
     return InkWell(
       onTap: () {
-        widget.onLocationSelected(prediction.placeId, prediction.description);
+        // Directly pass the latitude and longitude from the search result
+        // No need for additional API call since Nominatim already provides coordinates
+        widget.onLocationSelected(
+          result.uniqueId,
+          result.displayName,
+          result.latitude,
+          result.longitude,
+        );
         Get.back();
       },
       child: Container(
@@ -297,6 +337,8 @@ class _LocationSelectionBottomSheetState
                         color: colorGrey,
                         fontSize: 13,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],
@@ -309,5 +351,3 @@ class _LocationSelectionBottomSheetState
     );
   }
 }
-
-

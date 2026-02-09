@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../utils/app_const.dart';
@@ -70,10 +69,12 @@ class EditProductScreenState extends State<EditProductScreen> {
     height = MediaQuery.of(context).size.height;
 
     // Register controller with scroll callback
-    Get.put(EditProductController(
-      product: widget.product,
-      onErrorFieldScroll: scrollToErrorField,
-    ));
+    Get.put(
+      EditProductController(
+        product: widget.product,
+        onErrorFieldScroll: scrollToErrorField,
+      ),
+    );
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -92,13 +93,13 @@ class EditProductScreenState extends State<EditProductScreen> {
             controller: _scrollController,
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).padding.bottom + 20,
-              top: 20
+              top: 20,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Product Type Info (always show for edit)
-                _buildProductTypeInfo(controller),
+                // Product Type Section (Rent / Sell / Both) – user can change type
+                _buildProductTypeSection(controller),
                 const SizedBox(height: 16),
 
                 // Basic Info Section
@@ -172,47 +173,6 @@ class EditProductScreenState extends State<EditProductScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  /// Product Type Info (when pre-selected)
-  Widget _buildProductTypeInfo(EditProductController controller) {
-    final typeLabel = controller.productType == 'rent'
-        ? 'Rent'
-        : controller.productType == 'sell'
-        ? 'Sell'
-        : 'Both';
-    final typeIcon = controller.productType == 'rent'
-        ? Icons.calendar_today_rounded
-        : controller.productType == 'sell'
-        ? Icons.shopping_bag_rounded
-        : Icons.all_inclusive_rounded;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorMainTheme.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorMainTheme, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: colorMainTheme,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(typeIcon, color: colorWhite, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Product Type: $typeLabel',
-            style: textStyleSubHeading.copyWith(fontSize: 16),
-          ),
-        ],
       ),
     );
   }
@@ -632,6 +592,11 @@ class EditProductScreenState extends State<EditProductScreen> {
     EditProductController controller,
     AttributeField field,
   ) {
+    // Special handling for gender field
+    if (field.fieldName.toLowerCase() == 'gender') {
+      return _buildGenderField(controller, field);
+    }
+
     final controllerField = controller.dynamicFieldControllers[field.fieldName];
     if (controllerField == null) {
       return const SizedBox.shrink();
@@ -643,7 +608,7 @@ class EditProductScreenState extends State<EditProductScreen> {
     final isRequired = field.required;
     final isNumber = field.fieldType == 'number';
     final hasError = controller.getFieldError(field.fieldName) != null;
-    
+
     // Register key for dynamic field if it has error
     if (hasError && !_fieldKeys.containsKey(field.fieldName)) {
       _fieldKeys[field.fieldName] = GlobalKey();
@@ -663,6 +628,120 @@ class EditProductScreenState extends State<EditProductScreen> {
         controller.updateDynamicFieldValue(field.fieldName, value);
         controller.clearFieldError(field.fieldName);
       },
+    );
+  }
+
+  /// Build Gender Field Widget with Selectable Options
+  Widget _buildGenderField(
+    EditProductController controller,
+    AttributeField field,
+  ) {
+    final label =
+        field.fieldName[0].toUpperCase() +
+        field.fieldName.substring(1).replaceAll('_', ' ');
+    final isRequired = field.required;
+    final hasError = controller.getFieldError(field.fieldName) != null;
+    final selectedGender = controller.getSelectedGender();
+
+    // Register key for dynamic field if it has error
+    if (hasError && !_fieldKeys.containsKey(field.fieldName)) {
+      _fieldKeys[field.fieldName] = GlobalKey();
+    }
+
+    return Column(
+      key: hasError ? _fieldKeys[field.fieldName] : null,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label${isRequired ? ' *' : ''}',
+          style: textStyleBody.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: hasError ? colorRedCalendar : Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Male',
+                selectedGender == 'Male',
+                hasError,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Female',
+                selectedGender == 'Female',
+                hasError,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Other',
+                selectedGender == 'Other',
+                hasError,
+              ),
+            ),
+          ],
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              controller.getFieldError(field.fieldName) ?? '',
+              style: textStyleCaption.copyWith(
+                color: colorRedCalendar,
+                fontSize: 12,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build Gender Option Widget
+  Widget _buildGenderOption(
+    EditProductController controller,
+    String gender,
+    bool isSelected,
+    bool hasError,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        controller.setGenderSelection(gender);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorMainTheme.withOpacity(0.1)
+              : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: hasError
+                ? colorRedCalendar
+                : (isSelected ? colorMainTheme : Colors.grey.shade300),
+            width: isSelected ? 2.0 : 1.0,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            gender,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? colorMainTheme : Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -867,8 +946,9 @@ class EditProductScreenState extends State<EditProductScreen> {
     BuildContext context,
   ) {
     final hasError = controller.getFieldError('images') != null;
-    final totalImages = controller.existingImageUrls.length + controller.newImages.length;
-    
+    final totalImages =
+        controller.existingImageUrls.length + controller.newImages.length;
+
     return Container(
       key: _fieldKeys['images'],
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -907,7 +987,7 @@ class EditProductScreenState extends State<EditProductScreen> {
               itemBuilder: (context, index) {
                 // Determine if this is an existing image or new image
                 final isExisting = index < controller.existingImageUrls.length;
-                
+
                 return Stack(
                   children: [
                     ClipRRect(
@@ -921,28 +1001,38 @@ class EditProductScreenState extends State<EditProductScreen> {
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey.shade200,
-                                  child: Icon(Icons.broken_image, color: Colors.grey.shade400),
-                                );
-                              },
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: Colors.grey.shade100,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
-                                          : null,
-                                      color: colorMainTheme,
-                                      strokeWidth: 2,
-                                    ),
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey.shade400,
                                   ),
                                 );
                               },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey.shade100,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          color: colorMainTheme,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
                             )
                           : Image.file(
-                              controller.newImages[index - controller.existingImageUrls.length],
+                              controller.newImages[index -
+                                  controller.existingImageUrls.length],
                               width: double.infinity,
                               height: double.infinity,
                               fit: BoxFit.cover,
@@ -978,7 +1068,9 @@ class EditProductScreenState extends State<EditProductScreen> {
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
                               : const Icon(

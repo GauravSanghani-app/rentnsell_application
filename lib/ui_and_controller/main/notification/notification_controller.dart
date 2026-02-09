@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import '../../../models/notification_model.dart';
 import '../../../services/notification_api_service.dart';
-import '../../../utils/extension.dart';
 import '../../../utils/shared_pref.dart';
 
 class NotificationController extends GetxController {
-  final NotificationApiService _notificationApiService = NotificationApiService();
+  final NotificationApiService _notificationApiService =
+      NotificationApiService();
 
   List<NotificationModel> _notifications = [];
   bool _isLoading = false;
@@ -33,25 +33,22 @@ class NotificationController extends GetxController {
     super.onInit();
     _selectedFilter = 'all';
     // Load unread count if user is logged in
+    // This is the ONLY API call that should happen on Home Screen
     _loadUnreadCount();
   }
 
   @override
   void onReady() {
     super.onReady();
-    _initialLoad();
+    // DO NOT load notifications here!
+    // Notifications should only be loaded when user opens the Notification Screen
+    // This prevents the all-notification API from being called on the Home Screen
   }
 
-  Future<void> _initialLoad() async {
-    if (!_hasInitialLoad) {
-      _hasInitialLoad = true;
-      await loadNotifications();
-    }
-  }
-
-  // Call this when screen becomes visible
+  // Call this when Notification Screen becomes visible
+  // This is the ONLY place where loadNotifications() should be triggered
   void onScreenVisible() {
-    // Load data if not already loaded or if list is empty and not currently loading
+    // Load notifications when user opens the Notification Screen
     if (!_hasInitialLoad) {
       _hasInitialLoad = true;
       loadNotifications();
@@ -59,8 +56,8 @@ class NotificationController extends GetxController {
       // Reload if list is empty and not loading
       loadNotifications();
     }
-    // Refresh unread count when screen becomes visible
-    _loadUnreadCount();
+    // Note: Don't refresh unread count here as loading all notifications
+    // will mark them as read on the backend
   }
 
   Future<void> _loadUnreadCount() async {
@@ -126,9 +123,10 @@ class NotificationController extends GetxController {
         _notifications.addAll(notifications);
       }
 
-      // Update unread count
-      _unreadCount = notifications.where((n) => !n.isRead).length;
-      
+      // Reset unread count to 0 since calling all-notification API
+      // marks all notifications as read on the backend
+      _unreadCount = 0;
+
       // Since API returns all notifications, we don't have pagination info
       // Set hasNextPage to false
       _hasNextPage = false;
@@ -168,43 +166,4 @@ class NotificationController extends GetxController {
       loadNotifications();
     }
   }
-
-  Future<void> markAsRead(String notificationId) async {
-    // API not available yet
-    final context = Get.context;
-    if (context != null) {
-      context.showErrorToast(
-        message: 'Notification API is not available yet',
-      );
-    }
-  }
-
-  Future<void> markAllAsRead() async {
-    // API not available yet
-    final context = Get.context;
-    if (context != null) {
-      context.showErrorToast(
-        message: 'Notification API is not available yet',
-      );
-    }
-  }
-
-  Future<void> deleteNotification(String notificationId) async {
-    // API not available yet
-    final context = Get.context;
-    if (context != null) {
-      context.showErrorToast(
-        message: 'Notification API is not available yet',
-      );
-    }
-  }
-
-  void handleNotificationTap(NotificationModel notification) {
-    // According to requirements: "When tapping on any notification item, no navigation to another screen should happen."
-    // So we just mark as read if not already read, but don't navigate
-    if (!notification.isRead) {
-      markAsRead(notification.id);
-    }
-  }
 }
-

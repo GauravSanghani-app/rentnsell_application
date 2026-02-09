@@ -11,6 +11,7 @@ import '../../../services/contact_seller_api_service.dart';
 import '../../main/widgets/secondary_button.dart';
 import '../../main/widgets/skeleton_loader.dart';
 import 'product_detail_controller.dart';
+import 'product_image_gallery_screen.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String productId;
@@ -784,53 +785,74 @@ class ProductDetailScreen extends StatelessWidget {
                     itemCount: product.imageUrls.length,
                     onPageChanged: controller.setSelectedImageIndex,
                     itemBuilder: (context, index) {
-                      return Image.network(
-                        product.imageUrls[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorMainTheme.withOpacity(0.08),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(18),
-                                    decoration: BoxDecoration(
-                                      color: colorMainTheme.withOpacity(0.12),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: colorMainTheme.withOpacity(0.2),
-                                        width: 2,
+                      final imageUrl = product.imageUrls[index];
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          Get.to(
+                            () => ProductImageGalleryScreen(
+                              imageUrls: product.imageUrls,
+                              initialIndex: index,
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'product-image-$index-${imageUrl.hashCode}',
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: colorMainTheme.withOpacity(0.08),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(18),
+                                        decoration: BoxDecoration(
+                                          color: colorMainTheme
+                                              .withOpacity(0.12),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: colorMainTheme
+                                                .withOpacity(0.2),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.image_not_supported_rounded,
+                                          size: 52,
+                                          color: colorMainTheme,
+                                        ),
                                       ),
-                                    ),
-                                    child: Icon(
-                                      Icons.image_not_supported_rounded,
-                                      size: 52,
-                                      color: colorMainTheme,
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: colorMainTheme.withOpacity(0.08),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                    : null,
-                                color: colorMainTheme,
-                                strokeWidth: 4,
-                              ),
-                            ),
-                          );
-                        },
+                                ),
+                              );
+                            },
+                            loadingBuilder:
+                                (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: colorMainTheme.withOpacity(0.08),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                .cumulativeBytesLoaded /
+                                            loadingProgress
+                                                .expectedTotalBytes!
+                                        : null,
+                                    color: colorMainTheme,
+                                    strokeWidth: 4,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       );
                     },
                   ),

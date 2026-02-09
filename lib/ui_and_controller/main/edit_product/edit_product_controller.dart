@@ -40,11 +40,9 @@ class EditProductController extends GetxController {
   // Callback for scrolling to error field
   Function(String)? onErrorFieldScroll;
 
-  EditProductController({
-    required this.product,
-    this.onErrorFieldScroll,
-  })  : productId = product.id,
-        _productType = product.productType ?? product.type;
+  EditProductController({required this.product, this.onErrorFieldScroll})
+    : productId = product.id,
+      _productType = product.productType ?? product.type;
 
   // Fixed Form Fields
   late final TextEditingController titleController;
@@ -90,6 +88,7 @@ class EditProductController extends GetxController {
     _fieldErrors.remove(fieldName);
     update();
   }
+
   void clearAllErrors() {
     _fieldErrors.clear();
     update();
@@ -124,11 +123,11 @@ class EditProductController extends GetxController {
     // Initialize controllers
     titleController = TextEditingController(text: product.title);
     descriptionController = TextEditingController(text: product.description);
-    
-    // Initialize prices
+
+    // Initialize prices from API (price.rent, price.sell) – prefill both so values are retained when switching type
     if (product.priceObject != null) {
-      final rentPrice = product.priceObject!['rent'] as int? ?? 0;
-      final sellPrice = product.priceObject!['sell'] as int? ?? 0;
+      final rentPrice = (product.priceObject!['rent'] as num?)?.toInt() ?? 0;
+      final sellPrice = (product.priceObject!['sell'] as num?)?.toInt() ?? 0;
       rentPriceController = TextEditingController(
         text: rentPrice > 0 ? rentPrice.toString() : '',
       );
@@ -168,10 +167,9 @@ class EditProductController extends GetxController {
     // Initialize existing images
     _existingImageUrls = List<String>.from(product.imageUrls);
 
-    // Set product type
-    if (product.productType == 'both') {
-      _isBothRentSell = true;
-    }
+    // Set product type and sync checkbox (rent / sell / both)
+    _productType = product.productType ?? product.type;
+    _isBothRentSell = (_productType == 'both');
 
     // Load subcategories and attribute template after a delay
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -215,21 +213,22 @@ class EditProductController extends GetxController {
     super.onClose();
   }
 
-  /// Set Product Type
+  /// Set Product Type (Rent / Sell / Both). Keeps checkbox in sync; does not clear price fields.
   void setProductType(String type) {
     if (type == 'rent' || type == 'sell' || type == 'both') {
       _productType = type;
+      _isBothRentSell = (type == 'both');
       update();
     }
   }
 
-  /// Toggle Both Rent & Sell checkbox
+  /// Toggle Both Rent & Sell checkbox. When unchecking Both, switch to Rent (single type).
   void setBothRentSell(bool value) {
     _isBothRentSell = value;
     if (value) {
       _productType = 'both';
     } else {
-      _productType = product.productType ?? product.type;
+      _productType = 'rent';
     }
     update();
   }
@@ -325,7 +324,10 @@ class EditProductController extends GetxController {
 
     if (_attributeTemplate != null) {
       for (var field in _attributeTemplate!.fields) {
-        _dynamicFieldControllers[field.fieldName] = TextEditingController();
+        // Gender field doesn't need a TextEditingController, it uses selection
+        if (field.fieldName.toLowerCase() != 'gender') {
+          _dynamicFieldControllers[field.fieldName] = TextEditingController();
+        }
       }
     }
   }
@@ -343,6 +345,19 @@ class EditProductController extends GetxController {
   /// Update Dynamic Field Value
   void updateDynamicFieldValue(String fieldName, String value) {
     _dynamicFieldValues[fieldName] = value;
+    update();
+  }
+
+  /// Set Gender Selection
+  void setGenderSelection(String gender) {
+    _dynamicFieldValues['gender'] = gender;
+    clearFieldError('gender');
+    update();
+  }
+
+  /// Get Selected Gender
+  String? getSelectedGender() {
+    return _dynamicFieldValues['gender'];
   }
 
   /// Get Dynamic Field Value
@@ -538,28 +553,28 @@ class EditProductController extends GetxController {
 
     if (titleController.text.trim().isEmpty) {
       _fieldErrors['title'] = 'Please enter product title';
-      if (firstErrorField == null) firstErrorField = 'title';
+      firstErrorField ??= 'title';
     }
 
-    if (_selectedCategoryId == null || _selectedCategoryId?.isEmpty != false) {
+    if ((_selectedCategoryId ?? '').trim().isEmpty) {
       _fieldErrors['category'] = 'Please select a category';
-      if (firstErrorField == null) firstErrorField = 'category';
+      firstErrorField ??= 'category';
     }
 
     if (_selectedSubcategoryId == null || _selectedSubcategoryId!.isEmpty) {
       _fieldErrors['subcategory'] = 'Please select a subcategory';
-      if (firstErrorField == null) firstErrorField = 'subcategory';
+      firstErrorField ??= 'subcategory';
     }
 
     if (_productType == 'rent' || _productType == 'both') {
       if (rentPriceController.text.trim().isEmpty) {
         _fieldErrors['rentPrice'] = 'Please enter rent price';
-        if (firstErrorField == null) firstErrorField = 'rentPrice';
+        firstErrorField ??= 'rentPrice';
       } else {
         final rentPrice = int.tryParse(rentPriceController.text.trim());
         if (rentPrice == null || rentPrice <= 0) {
           _fieldErrors['rentPrice'] = 'Please enter a valid rent price';
-          if (firstErrorField == null) firstErrorField = 'rentPrice';
+          firstErrorField ??= 'rentPrice';
         }
       }
     }
@@ -567,32 +582,32 @@ class EditProductController extends GetxController {
     if (_productType == 'sell' || _productType == 'both') {
       if (sellPriceController.text.trim().isEmpty) {
         _fieldErrors['sellPrice'] = 'Please enter sell price';
-        if (firstErrorField == null) firstErrorField = 'sellPrice';
+        firstErrorField ??= 'sellPrice';
       } else {
         final sellPrice = int.tryParse(sellPriceController.text.trim());
         if (sellPrice == null || sellPrice <= 0) {
           _fieldErrors['sellPrice'] = 'Please enter a valid sell price';
-          if (firstErrorField == null) firstErrorField = 'sellPrice';
+          firstErrorField ??= 'sellPrice';
         }
       }
     }
 
     if (cityController.text.trim().isEmpty) {
       _fieldErrors['city'] = 'Please enter city';
-      if (firstErrorField == null) firstErrorField = 'city';
+      firstErrorField ??= 'city';
     }
 
     final lat = double.tryParse(latitudeController.text.trim());
     final lng = double.tryParse(longitudeController.text.trim());
     if (lat == null || lng == null) {
       _fieldErrors['coordinates'] = 'Please enter valid coordinates';
-      if (firstErrorField == null) firstErrorField = 'coordinates';
+      firstErrorField ??= 'coordinates';
     }
 
     // Validate at least one image exists (existing or new)
     if (_existingImageUrls.isEmpty && _newImages.isEmpty) {
       _fieldErrors['images'] = 'Please select at least one image';
-      if (firstErrorField == null) firstErrorField = 'images';
+      firstErrorField ??= 'images';
     }
 
     // Validate dynamic attributes
@@ -601,19 +616,26 @@ class EditProductController extends GetxController {
         if (field.required) {
           final value = getDynamicFieldValue(field.fieldName);
           if (value == null || value.trim().isEmpty) {
-            final fieldLabel = field.fieldName[0].toUpperCase() +
+            final fieldLabel =
+                field.fieldName[0].toUpperCase() +
                 field.fieldName.substring(1).replaceAll('_', ' ');
-            _fieldErrors[field.fieldName] = 'Please enter $fieldLabel';
-            if (firstErrorField == null) firstErrorField = field.fieldName;
+            // Special message for gender field
+            if (field.fieldName.toLowerCase() == 'gender') {
+              _fieldErrors[field.fieldName] = 'Please select $fieldLabel';
+            } else {
+              _fieldErrors[field.fieldName] = 'Please enter $fieldLabel';
+            }
+            firstErrorField ??= field.fieldName;
           } else {
             if (field.fieldType == 'number') {
               final numValue = num.tryParse(value.trim());
               if (numValue == null) {
-                final fieldLabel = field.fieldName[0].toUpperCase() +
+                final fieldLabel =
+                    field.fieldName[0].toUpperCase() +
                     field.fieldName.substring(1).replaceAll('_', ' ');
                 _fieldErrors[field.fieldName] =
                     'Please enter a valid number for $fieldLabel';
-                if (firstErrorField == null) firstErrorField = field.fieldName;
+                firstErrorField ??= field.fieldName;
               }
             }
           }
@@ -665,15 +687,14 @@ class EditProductController extends GetxController {
         return;
       }
 
-      // Build price map
-      final priceMap = <String, int>{
-        'rent': _productType == 'rent' || _productType == 'both'
-            ? int.parse(rentPriceController.text.trim())
-            : 0,
-        'sell': _productType == 'sell' || _productType == 'both'
-            ? int.parse(sellPriceController.text.trim())
-            : 0,
-      };
+      // Build price map: only include keys for current product type (no unused price in payload)
+      final priceMap = <String, int>{};
+      if (_productType == 'rent' || _productType == 'both') {
+        priceMap['rent'] = int.parse(rentPriceController.text.trim());
+      }
+      if (_productType == 'sell' || _productType == 'both') {
+        priceMap['sell'] = int.parse(sellPriceController.text.trim());
+      }
 
       // Build location map
       final locationMap = <String, dynamic>{
@@ -689,7 +710,8 @@ class EditProductController extends GetxController {
           final value = getDynamicFieldValue(field.fieldName);
           if (value != null && value.trim().isNotEmpty) {
             if (field.fieldType == 'number') {
-              attributesMap[field.fieldName] = num.tryParse(value.trim()) ?? value.trim();
+              attributesMap[field.fieldName] =
+                  num.tryParse(value.trim()) ?? value.trim();
             } else {
               attributesMap[field.fieldName] = value.trim();
             }
@@ -754,4 +776,3 @@ class EditProductController extends GetxController {
     }
   }
 }
-

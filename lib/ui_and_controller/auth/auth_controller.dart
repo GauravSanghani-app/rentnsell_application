@@ -55,27 +55,27 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<Map<String, dynamic>?> signInWithGoogle() async {
-    _isLoading = true;
-    update();
-
-    try {
-      final userData = await _authService.signInWithGoogle();
-      if (userData != null && userData.isNotEmpty) {
-        _isLoggedIn = true;
-        _isProfileComplete = _profileService.isProfileComplete();
-        update();
-        return userData;
-      }
-      return null;
-    } catch (e) {
-      print('AuthController signInWithGoogle error: $e');
-      return null;
-    } finally {
-      _isLoading = false;
-      update();
-    }
-  }
+  // Future<Map<String, dynamic>?> signInWithGoogle() async {
+  //   _isLoading = true;
+  //   update();
+  //
+  //   try {
+  //     final userData = await _authService.signInWithGoogle();
+  //     if (userData != null && userData.isNotEmpty) {
+  //       _isLoggedIn = true;
+  //       _isProfileComplete = _profileService.isProfileComplete();
+  //       update();
+  //       return userData;
+  //     }
+  //     return null;
+  //   } catch (e) {
+  //     print('AuthController signInWithGoogle error: $e');
+  //     return null;
+  //   } finally {
+  //     _isLoading = false;
+  //     update();
+  //   }
+  // }
 
   Future<void> signOut() async {
     try {

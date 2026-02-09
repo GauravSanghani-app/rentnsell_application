@@ -10,7 +10,6 @@ import '../../../services/category_api_service.dart';
 import '../../../services/subcategory_api_service.dart';
 import '../../../services/attribute_template_api_service.dart';
 import '../../../services/product_create_api_service.dart';
-import '../../../services/google_places_api_service.dart';
 import '../../../models/request/product_create_request_model.dart';
 import '../../../utils/shared_pref.dart';
 import '../widgets/location_selection_bottom_sheet.dart';
@@ -25,8 +24,6 @@ class AddProductController extends GetxController {
       AttributeTemplateApiService();
   final ProductCreateApiService _productCreateApiService =
       ProductCreateApiService();
-  final GooglePlacesApiService _googlePlacesApiService =
-      GooglePlacesApiService();
 
   // Product Type: 'rent', 'sell', or 'both'
   String _productType;
@@ -244,10 +241,13 @@ class AddProductController extends GetxController {
     _dynamicFieldControllers.clear();
     _dynamicFieldValues.clear();
 
-    // Create controllers for each field
+    // Create controllers for each field (except gender which uses selection)
     if (_attributeTemplate != null) {
       for (var field in _attributeTemplate!.fields) {
-        _dynamicFieldControllers[field.fieldName] = TextEditingController();
+        // Gender field doesn't need a TextEditingController, it uses selection
+        if (field.fieldName.toLowerCase() != 'gender') {
+          _dynamicFieldControllers[field.fieldName] = TextEditingController();
+        }
       }
     }
   }
@@ -265,6 +265,19 @@ class AddProductController extends GetxController {
   /// Update Dynamic Field Value
   void updateDynamicFieldValue(String fieldName, String value) {
     _dynamicFieldValues[fieldName] = value;
+    update();
+  }
+
+  /// Set Gender Selection
+  void setGenderSelection(String gender) {
+    _dynamicFieldValues['gender'] = gender;
+    clearFieldError('gender');
+    update();
+  }
+
+  /// Get Selected Gender
+  String? getSelectedGender() {
+    return _dynamicFieldValues['gender'];
   }
 
   /// Get Dynamic Field Value
@@ -338,40 +351,24 @@ class AddProductController extends GetxController {
   void showLocationSelection() {
     Get.bottomSheet(
       LocationSelectionBottomSheet(
-        onLocationSelected: (String placeId, String description) async {
-          _isLoadingLocation = true;
-          update();
-
-          try {
-            // Get place details to fetch latitude and longitude
-            final placeDetails = await _googlePlacesApiService.getPlaceDetails(
-              placeId: placeId,
-            );
-
-            if (placeDetails.status == 'OK' &&
-                placeDetails.result != null &&
-                placeDetails.result!.geometry != null &&
-                placeDetails.result!.geometry!.location != null) {
-              final location = placeDetails.result!.geometry!.location!;
-              _selectedLatitude = location.lat;
-              _selectedLongitude = location.lng;
+        onLocationSelected:
+            (
+              String placeId,
+              String description,
+              double latitude,
+              double longitude,
+            ) {
+              // Nominatim API already provides coordinates directly
+              // No need for additional API call
+              _selectedLatitude = latitude;
+              _selectedLongitude = longitude;
               _selectedLocationName = description;
               clearFieldError('location');
               print(
-                'AddProductController: Location selected - Lat: ${_selectedLatitude}, Long: ${_selectedLongitude}, Description: $description',
+                'AddProductController: Location selected - Lat: $latitude, Long: $longitude, Description: $description',
               );
-            } else {
-              print('AddProductController: Failed to get place details');
-              _fieldErrors['location'] = 'Failed to get location details';
-            }
-          } catch (e) {
-            print('AddProductController: Error getting place details: $e');
-            _fieldErrors['location'] = 'Error selecting location';
-          } finally {
-            _isLoadingLocation = false;
-            update();
-          }
-        },
+              update();
+            },
       ),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -453,7 +450,12 @@ class AddProductController extends GetxController {
             final fieldLabel =
                 field.fieldName[0].toUpperCase() +
                 field.fieldName.substring(1).replaceAll('_', ' ');
-            _fieldErrors[field.fieldName] = 'Please enter $fieldLabel';
+            // Special message for gender field
+            if (field.fieldName.toLowerCase() == 'gender') {
+              _fieldErrors[field.fieldName] = 'Please select $fieldLabel';
+            } else {
+              _fieldErrors[field.fieldName] = 'Please enter $fieldLabel';
+            }
             if (firstErrorField == null) firstErrorField = field.fieldName;
           } else {
             // Validate number fields

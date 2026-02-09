@@ -617,6 +617,11 @@ class AddProductScreenState extends State<AddProductScreen> {
     AddProductController controller,
     AttributeField field,
   ) {
+    // Special handling for gender field
+    if (field.fieldName.toLowerCase() == 'gender') {
+      return _buildGenderField(controller, field);
+    }
+
     final controllerField = controller.dynamicFieldControllers[field.fieldName];
     if (controllerField == null) {
       return const SizedBox.shrink();
@@ -648,6 +653,120 @@ class AddProductScreenState extends State<AddProductScreen> {
         controller.updateDynamicFieldValue(field.fieldName, value);
         controller.clearFieldError(field.fieldName);
       },
+    );
+  }
+
+  /// Build Gender Field Widget with Selectable Options
+  Widget _buildGenderField(
+    AddProductController controller,
+    AttributeField field,
+  ) {
+    final label =
+        field.fieldName[0].toUpperCase() +
+        field.fieldName.substring(1).replaceAll('_', ' ');
+    final isRequired = field.required;
+    final hasError = controller.getFieldError(field.fieldName) != null;
+    final selectedGender = controller.getSelectedGender();
+
+    // Register key for dynamic field if it has error
+    if (hasError && !_fieldKeys.containsKey(field.fieldName)) {
+      _fieldKeys[field.fieldName] = GlobalKey();
+    }
+
+    return Column(
+      key: hasError ? _fieldKeys[field.fieldName] : null,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label${isRequired ? ' *' : ''}',
+          style: textStyleBody.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: hasError ? colorRedCalendar : Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Male',
+                selectedGender == 'Male',
+                hasError,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Female',
+                selectedGender == 'Female',
+                hasError,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildGenderOption(
+                controller,
+                'Other',
+                selectedGender == 'Other',
+                hasError,
+              ),
+            ),
+          ],
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              controller.getFieldError(field.fieldName) ?? '',
+              style: textStyleCaption.copyWith(
+                color: colorRedCalendar,
+                fontSize: 12,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build Gender Option Widget
+  Widget _buildGenderOption(
+    AddProductController controller,
+    String gender,
+    bool isSelected,
+    bool hasError,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        controller.setGenderSelection(gender);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorMainTheme.withOpacity(0.1)
+              : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: hasError
+                ? colorRedCalendar
+                : (isSelected ? colorMainTheme : Colors.grey.shade300),
+            width: isSelected ? 2.0 : 1.0,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            gender,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? colorMainTheme : Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -371,4 +371,69 @@ class ProductApiService {
       );
     }
   }
+
+  /// Delete a product by ID.
+  /// Success: 200 with body {"msg": "Product removed"}.
+  /// Failure: e.g. 404 with "Product not found" or API error message.
+  Future<({bool success, String message})> deleteProduct({
+    required String productId,
+    required String jwtToken,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiUrl.baseUrl}products/$productId');
+      logger.i('ProductApiService: DELETE $uri');
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+      };
+      final httpResponse = await http.delete(uri, headers: headers);
+      logger.i(
+        'ProductApiService: Delete Status Code: ${httpResponse.statusCode}',
+      );
+      logger.d('ProductApiService: Delete Response: ${httpResponse.body}');
+
+      if (httpResponse.statusCode == 200) {
+        final body = httpResponse.body.trim();
+        if (body.isNotEmpty) {
+          try {
+            final decoded = json.decode(body);
+            if (decoded is Map && decoded['msg'] != null) {
+              return (success: true, message: decoded['msg'].toString());
+            }
+          } catch (_) {}
+        }
+        return (success: true, message: 'Product removed');
+      }
+
+      // Parse error message from response
+      String errorMessage = 'Failed to delete product';
+      final body = httpResponse.body.trim();
+      if (body.isNotEmpty) {
+        try {
+          final decoded = json.decode(body);
+          if (decoded is Map && decoded['msg'] != null) {
+            errorMessage = decoded['msg'].toString();
+          } else if (decoded is String) {
+            errorMessage = decoded;
+          }
+        } catch (_) {
+          if (body.length < 200) errorMessage = body;
+        }
+      } else if (httpResponse.statusCode == 404) {
+        errorMessage = 'Product not found';
+      }
+
+      return (success: false, message: errorMessage);
+    } catch (e, stackTrace) {
+      logger.e(
+        'ProductApiService: Exception in deleteProduct',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return (
+        success: false,
+        message: 'Network error. Please check your connection and try again.',
+      );
+    }
+  }
 }

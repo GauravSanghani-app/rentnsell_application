@@ -6,7 +6,7 @@ import '../../../models/product_model.dart';
 import '../../../models/request/wishlist_add_request_model.dart';
 import '../../../services/product_api_service.dart';
 import '../../../services/wishlist_api_service.dart';
-import '../../../services/google_places_api_service.dart';
+import '../../../services/nominatim_api_service.dart';
 import '../../../services/fcm_service.dart';
 import '../../../utils/shared_pref.dart';
 import '../../../utils/extension.dart';
@@ -19,8 +19,7 @@ import 'package:permission_handler/permission_handler.dart';
 class HomeController extends GetxController {
   final ProductApiService _productApiService = ProductApiService();
   final WishlistApiService _wishlistApiService = WishlistApiService();
-  final GooglePlacesApiService _googlePlacesApiService =
-      GooglePlacesApiService();
+  final NominatimApiService _nominatimApiService = NominatimApiService();
 
   // Tab selection
   String _selectedTab = 'rent'; // 'rent' or 'sell'
@@ -211,7 +210,7 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Convert latitude and longitude to readable address
+  /// Convert latitude and longitude to readable address using Nominatim API
   Future<void> _getAddressFromCoordinates(
     double latitude,
     double longitude,
@@ -221,43 +220,19 @@ class HomeController extends GetxController {
         'HomeController: Reverse geocoding for Lat: $latitude, Long: $longitude',
       );
 
-      final geocodingResponse = await _googlePlacesApiService.reverseGeocode(
+      final geocodingResponse = await _nominatimApiService.reverseGeocode(
         latitude: latitude,
         longitude: longitude,
       );
 
-      if (geocodingResponse.status == 'OK' &&
-          geocodingResponse.results.isNotEmpty) {
-        final result = geocodingResponse.results.first;
-        // Use formatted_address if available, otherwise construct from components
-        if (result.formattedAddress != null &&
-            result.formattedAddress!.isNotEmpty) {
-          _currentLocation = result.formattedAddress!;
-        } else {
-          // Construct address from components
-          final city = result.getCity() ?? '';
-          final state = result.getState() ?? '';
-          final country = result.getCountry() ?? '';
-
-          if (city.isNotEmpty && state.isNotEmpty) {
-            _currentLocation = '$city, $state';
-            if (country.isNotEmpty) {
-              _currentLocation += ', $country';
-            }
-          } else if (state.isNotEmpty) {
-            _currentLocation = state;
-            if (country.isNotEmpty) {
-              _currentLocation += ', $country';
-            }
-          } else {
-            _currentLocation = 'Current Location';
-          }
-        }
+      if (geocodingResponse.isSuccess && geocodingResponse.result != null) {
+        // Use the short address for better display
+        _currentLocation = geocodingResponse.shortAddress;
 
         print('HomeController: Address resolved - $_currentLocation');
       } else {
         print(
-          'HomeController: Reverse geocoding failed or returned no results',
+          'HomeController: Reverse geocoding failed - ${geocodingResponse.errorMessage ?? 'No results'}',
         );
         _currentLocation = 'Current Location';
       }
@@ -278,36 +253,15 @@ class HomeController extends GetxController {
   void showLocationSelection() {
     Get.bottomSheet(
       LocationSelectionBottomSheet(
-        onLocationSelected: (String placeId, String description) async {
-          // Show loading state
-          _currentLocation = 'Loading...';
-          update();
-
-          try {
-            // Get place details to fetch latitude and longitude
-            final placeDetails = await _googlePlacesApiService.getPlaceDetails(
-              placeId: placeId,
-            );
-
-            if (placeDetails.status == 'OK' &&
-                placeDetails.result != null &&
-                placeDetails.result!.geometry != null &&
-                placeDetails.result!.geometry!.location != null) {
-              final location = placeDetails.result!.geometry!.location!;
-              _latitude = location.lat;
-              _longitude = location.lng;
-              _currentLocation = description;
-              print(
-                'HomeController: Location selected - Lat: ${_latitude}, Long: ${_longitude}, Description: $description',
-              );
-            } else {
-              print('HomeController: Failed to get place details');
-              _currentLocation = description;
-            }
-          } catch (e) {
-            print('HomeController: Error getting place details: $e');
-            _currentLocation = description;
-          }
+        onLocationSelected: (String placeId, String description, double latitude, double longitude) {
+          // Nominatim API already provides coordinates directly
+          // No need for additional API call
+          _latitude = latitude;
+          _longitude = longitude;
+          _currentLocation = description;
+          print(
+            'HomeController: Location selected - Lat: $latitude, Long: $longitude, Description: $description',
+          );
 
           update();
           _currentPage = 1;

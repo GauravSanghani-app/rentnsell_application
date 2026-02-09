@@ -19,7 +19,7 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width ?? double.infinity,
-      height: 50,
+      // height: 50,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: primaryButtonStyle,
@@ -29,7 +29,7 @@ class PrimaryButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : Text(

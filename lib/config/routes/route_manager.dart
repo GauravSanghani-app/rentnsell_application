@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../ui_and_controller/auth/login/mobile_login_screen.dart';
 import '../../ui_and_controller/auth/signup/signup_screen.dart';
-import '../../ui_and_controller/auth/profile_manage/profile_manage_screen.dart';
 import '../../ui_and_controller/main/master/master_screen.dart';
 import '../../ui_and_controller/main/add_product/add_product_screen.dart';
 import '../../ui_and_controller/main/product_detail/product_detail_screen.dart';
@@ -22,7 +21,7 @@ class AppRoutes {
   static const String master = "/master";
   static const String mobileLogin = "/mobile-login";
   static const String signup = "/signup";
-  static const String profileManage = "/profile-manage";
+  // static const String profileManage = "/profile-manage";
   static const String addProduct = "/add-product";
   static const String productDetail = "/product-detail";
   static const String notification = "/notification";
@@ -36,7 +35,7 @@ class AppRoutes {
     GetPage(name: master, page: () => const MasterScreen()),
     GetPage(name: mobileLogin, page: () => const MobileLoginScreen()),
     GetPage(name: signup, page: () => const SignupScreen()),
-    GetPage(name: profileManage, page: () => const ProfileManageScreen()),
+    // GetPage(name: profileManage, page: () => const ProfileManageScreen()),
     GetPage(
       name: addProduct,
       page: () {

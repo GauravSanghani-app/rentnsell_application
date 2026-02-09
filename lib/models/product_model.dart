@@ -142,6 +142,14 @@ class ProductModel {
       legacyLocation = locationObj['city'] as String? ?? '';
       legacyLatitude = (locationObj['lat'] as num?)?.toDouble();
       legacyLongitude = (locationObj['lng'] as num?)?.toDouble();
+      // GeoJSON / API: coordinates[0] = longitude, coordinates[1] = latitude
+      if (legacyLatitude == null || legacyLongitude == null) {
+        final coords = locationObj['coordinates'];
+        if (coords is List && coords.length >= 2) {
+          legacyLongitude ??= (coords[0] as num?)?.toDouble();
+          legacyLatitude ??= (coords[1] as num?)?.toDouble();
+        }
+      }
     } else if (json['location'] is String) {
       legacyLocation = json['location'] as String;
       legacyLatitude = json['latitude'] != null
