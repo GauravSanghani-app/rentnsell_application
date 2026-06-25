@@ -270,6 +270,51 @@ class MyProductsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 6),
+                        // Status (Approved / Under Review) – clear and non-overlapping
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: product.isReviewed
+                                ? Colors.green.shade50
+                                : Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: product.isReviewed
+                                  ? Colors.green.shade400
+                                  : Colors.orange.shade400,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                product.isReviewed
+                                    ? Icons.check_circle_rounded
+                                    : Icons.schedule_rounded,
+                                size: 12,
+                                color: product.isReviewed
+                                    ? Colors.green.shade700
+                                    : Colors.orange.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                product.isReviewed ? 'Approved' : 'Under Review',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: product.isReviewed
+                                      ? Colors.green.shade800
+                                      : Colors.orange.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const Spacer(),
                         const SizedBox(height: 6),
                         // Price

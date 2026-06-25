@@ -316,6 +316,7 @@ class WishlistScreen extends StatelessWidget {
           arguments: {
             'productId': product.id,
             'initialType': controller.selectedFilter, // Pass selected filter (rent/sell)
+            'productData': product.toJson(),
           },
         );
       },
@@ -474,36 +475,6 @@ class WishlistScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (product.distance != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorMainTheme.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.navigation_rounded,
-                                  size: 10,
-                                  color: colorMainTheme,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '${product.distance!.toStringAsFixed(1)} km',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: colorMainTheme,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                       ],
                     ),
                   ],

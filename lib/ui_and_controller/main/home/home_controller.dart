@@ -14,6 +14,7 @@ import '../widgets/login_bottom_sheet.dart';
 import '../widgets/location_selection_bottom_sheet.dart';
 import '../../auth/auth_controller.dart';
 import '../notification/notification_controller.dart';
+import '../wishlist/wishlist_controller.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomeController extends GetxController {
@@ -515,6 +516,19 @@ class HomeController extends GetxController {
     }
     update();
 
+    // Sync wishlist state with Wishlist screen (optimistic)
+    if (Get.isRegistered<WishlistController>()) {
+      try {
+        final wishlistController = Get.find<WishlistController>();
+        wishlistController.handleExternalWishlistChange(
+          product.id,
+          newWishlistStatus,
+        );
+      } catch (_) {
+        // Ignore sync errors
+      }
+    }
+
     try {
       final jwtToken = preferences.getString(SharedPreference.jwtToken) ?? '';
 
@@ -580,6 +594,47 @@ class HomeController extends GetxController {
         context.showErrorToast(message: 'Failed to update wishlist');
       }
     }
+  }
+
+  /// Update wishlist status for a product from other screens (e.g., detail/wishlist).
+  void updateWishlistStatus(String productId, bool isWishlisted) {
+    final index = _productList.indexWhere((p) => p.id == productId);
+    if (index == -1) return;
+
+    final product = _productList[index];
+    _productList[index] = ProductModel(
+      id: product.id,
+      type: product.type,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      deposit: product.deposit,
+      categoryId: product.categoryId,
+      subcategoryId: product.subcategoryId,
+      imageUrls: product.imageUrls,
+      location: product.location,
+      contactPhone: product.contactPhone,
+      isContactShow: product.isContactShow,
+      gender: product.gender,
+      condition: product.condition,
+      size: product.size,
+      color: product.color,
+      brand: product.brand,
+      sellerId: product.sellerId,
+      sellerName: product.sellerName,
+      sellerImageUrl: product.sellerImageUrl,
+      createdAt: product.createdAt,
+      latitude: product.latitude,
+      longitude: product.longitude,
+      isWishlisted: isWishlisted,
+      distance: product.distance,
+      priceObject: product.priceObject,
+      locationObject: product.locationObject,
+      productType: product.productType,
+      attributes: product.attributes,
+      isReviewed: product.isReviewed,
+    );
+    update();
   }
 
   void setFilter({

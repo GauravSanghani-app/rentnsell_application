@@ -3,6 +3,7 @@ import '../../../models/product_model.dart';
 import '../../../services/wishlist_api_service.dart';
 import '../../../utils/shared_pref.dart';
 import '../../../utils/extension.dart';
+import '../home/home_controller.dart';
 
 class WishlistController extends GetxController {
   final WishlistApiService _wishlistApiService = WishlistApiService();
@@ -229,6 +230,16 @@ class WishlistController extends GetxController {
     _applyFilter();
     update();
 
+    // Notify Home screen so the same product is no longer shown as wishlisted
+    if (Get.isRegistered<HomeController>()) {
+      try {
+        final homeController = Get.find<HomeController>();
+        homeController.updateWishlistStatus(productId, false);
+      } catch (_) {
+        // Ignore sync errors
+      }
+    }
+
     // Call API in background
     // IMPORTANT: Using productId (product.productId from API) for DELETE API
     try {
@@ -289,5 +300,23 @@ class WishlistController extends GetxController {
 
   Future<void> refreshWishlist() async {
     await loadWishlist();
+  }
+
+  /// Handle wishlist changes that happened in other screens (Home / Product Detail).
+  /// When a product is wishlisted elsewhere, we reload the wishlist.
+  /// When it is removed elsewhere, we optimistically remove it here.
+  Future<void> handleExternalWishlistChange(
+    String productId,
+    bool isWishlisted,
+  ) async {
+    if (isWishlisted) {
+      // Product was added to wishlist elsewhere - refresh from server
+      await refreshWishlist();
+    } else {
+      // Product was removed from wishlist elsewhere - update local lists
+      _allWishlistItems.removeWhere((item) => item.id == productId);
+      _applyFilter();
+      update();
+    }
   }
 }

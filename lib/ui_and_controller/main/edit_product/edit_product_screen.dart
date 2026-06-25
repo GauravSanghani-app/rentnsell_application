@@ -972,38 +972,38 @@ class EditProductScreenState extends State<EditProductScreen> {
             style: textStyleSubHeading.copyWith(fontSize: 16),
           ),
           const SizedBox(height: 16),
-          // Image Grid - Show both existing and new images
+          // Image Grid - consistent size, spacing, and remove icon
           if (totalImages > 0)
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
                 childAspectRatio: 1,
               ),
               itemCount: totalImages,
               itemBuilder: (context, index) {
-                // Determine if this is an existing image or new image
-                final isExisting = index < controller.existingImageUrls.length;
+                final isExisting =
+                    index < controller.existingImageUrls.length;
 
-                return Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: isExisting
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      isExisting
                           ? Image.network(
                               controller.existingImageUrls[index],
-                              width: double.infinity,
-                              height: double.infinity,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey.shade200,
                                   child: Icon(
-                                    Icons.broken_image,
+                                    Icons.broken_image_rounded,
                                     color: Colors.grey.shade400,
+                                    size: 32,
                                   ),
                                 );
                               },
@@ -1033,55 +1033,63 @@ class EditProductScreenState extends State<EditProductScreen> {
                           : Image.file(
                               controller.newImages[index -
                                   controller.existingImageUrls.length],
-                              width: double.infinity,
-                              height: double.infinity,
                               fit: BoxFit.cover,
                             ),
-                    ),
-                    // Delete/Remove button
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: controller.isDeletingImage
-                            ? null
-                            : () {
-                                if (isExisting) {
-                                  // Delete existing image from server
-                                  controller.deleteExistingImage(index);
-                                } else {
-                                  // Remove new image from list
-                                  controller.removeNewImage(
-                                    index - controller.existingImageUrls.length,
-                                  );
-                                }
-                              },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: controller.isDeletingImage
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 16,
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: GestureDetector(
+                          onTap: controller.isDeletingImage
+                              ? null
+                              : () {
+                                  if (isExisting) {
+                                    controller.deleteExistingImage(index);
+                                  } else {
+                                    controller.removeNewImage(
+                                      index -
+                                          controller.existingImageUrls.length,
+                                    );
+                                  }
+                                },
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
                                 ),
+                              ],
+                            ),
+                            child: controller.isDeletingImage
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),

@@ -400,14 +400,14 @@ class ProfileScreen extends StatelessWidget {
             iconColor: Colors.orange.shade600,
             onTap: () => _showLogoutDialog(context),
           ),
-          Divider(height: 1, color: Colors.grey.shade200, indent: 56),
-          _buildSettingsTile(
-            icon: Icons.delete_forever_rounded,
-            title: 'Delete Account',
-            iconColor: Colors.red.shade600,
-            titleColor: Colors.red.shade600,
-            onTap: () => _showDeleteAccountDialog(context),
-          ),
+          // Divider(height: 1, color: Colors.grey.shade200, indent: 56),
+          // _buildSettingsTile(
+          //   icon: Icons.delete_forever_rounded,
+          //   title: 'Delete Account',
+          //   iconColor: Colors.red.shade600,
+          //   titleColor: Colors.red.shade600,
+          //   onTap: () => _showDeleteAccountDialog(context),
+          // ),
         ],
       ),
     );
@@ -521,31 +521,97 @@ class ProfileScreen extends StatelessWidget {
   Future<void> _openPrivacyPolicy(BuildContext context) async {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.privacy_tip_rounded, color: colorMainTheme, size: 24),
-            const SizedBox(width: 12),
-            Text('Privacy Policy', style: textStyleSubHeading),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        content: SingleChildScrollView(
-          child: Text(
-            'Privacy Policy Content\n\n'
-            'This is a placeholder for the privacy policy. In production, '
-            'this would contain the full privacy policy text or link to a web page.\n\n'
-            'You can replace this with actual privacy policy content or implement '
-            'a web view to display the full policy.',
-            style: textStyleBody,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorMainTheme.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.privacy_tip_rounded,
+                        color: colorMainTheme,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Privacy Policy',
+                        style: textStyleSubHeading.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'We respect your privacy and are committed to protecting your information.',
+                  style: textStyleBody.copyWith(
+                    fontSize: 14,
+                    color: Colors.grey.shade800,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap "View full policy" to read the complete details.',
+                  style: textStyleCaption.copyWith(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorMainTheme,
+                        foregroundColor: colorWhite,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Get.toNamed(AppRoutes.privacyPolicy);
+                      },
+                      child: const Text('View full policy'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: colorMainTheme)),
-          ),
-        ],
       ),
     );
   }
@@ -553,60 +619,119 @@ class ProfileScreen extends StatelessWidget {
   Future<void> _openRateUs(BuildContext context) async {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.star_rounded, color: Colors.amber, size: 24),
-            const SizedBox(width: 12),
-            Text('Rate Us', style: textStyleSubHeading),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Enjoying the app? Please rate us!',
-              style: textStyleBody,
-              textAlign: TextAlign.center,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Enjoying RentNSell?',
+                        style: textStyleSubHeading.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your rating helps us improve the app and reach more people.',
+                  style: textStyleBody.copyWith(
+                    fontSize: 14,
+                    color: Colors.grey.shade800,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 30,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'We will redirect you to the app store rating page.',
+                  style: textStyleCaption.copyWith(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Not now',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorMainTheme,
+                        foregroundColor: colorWhite,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // TODO: Implement app store redirect
+                        Fluttertoast.showToast(
+                          msg: 'Thank you for your feedback!',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.green.shade700,
+                          textColor: Colors.white,
+                        );
+                      },
+                      child: const Text('Rate the app'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return Icon(Icons.star_rounded, color: Colors.amber, size: 32);
-              }),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'In production, this would open the app store page.',
-              style: textStyleCaption.copyWith(fontSize: 11),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Maybe Later', style: TextStyle(color: colorGrey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Fluttertoast.showToast(
-                msg: 'Thank you for rating!',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.green.shade700,
-                textColor: Colors.white,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorMainTheme,
-            ),
-            child: const Text('Rate Now'),
-          ),
-        ],
       ),
     );
   }
@@ -632,19 +757,19 @@ class ProfileScreen extends StatelessWidget {
             _buildHelpItem(
               icon: Icons.email_rounded,
               label: 'Email',
-              value: 'support@rentnsell.com',
+              value: 'info@softclues.in',
             ),
             const SizedBox(height: 12),
             _buildHelpItem(
               icon: Icons.phone_rounded,
               label: 'Phone',
-              value: '+1 (555) 123-4567',
+              value: '+91 9725556970',
             ),
             const SizedBox(height: 12),
             _buildHelpItem(
               icon: Icons.access_time_rounded,
-              label: 'Hours',
-              value: 'Mon-Fri: 9 AM - 6 PM',
+              label: 'Working Hours',
+              value: '9:00 AM – 6:00 PM',
             ),
           ],
         ),

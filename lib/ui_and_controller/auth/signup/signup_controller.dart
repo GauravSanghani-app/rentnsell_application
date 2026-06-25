@@ -5,11 +5,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../config/routes/route_manager.dart';
 import '../../../services/signup_api_service.dart';
+import '../../../services/fcm_api_service.dart';
+import '../../../services/fcm_service.dart';
 import '../../../utils/shared_pref.dart';
 import '../../auth/auth_controller.dart';
 
 class SignupController extends GetxController {
   final SignupApiService _signupApiService = SignupApiService();
+  final FcmApiService _fcmApiService = FcmApiService();
   final ImagePicker _imagePicker = ImagePicker();
   
   final TextEditingController nameController = TextEditingController();
@@ -105,7 +108,7 @@ class SignupController extends GetxController {
 
       if (signupResponse.success && signupResponse.token != null) {
         final signupData = signupResponse.token!;
-        
+
         // Save token and user data
         await preferences.putString(
           SharedPreference.jwtToken,
@@ -138,11 +141,16 @@ class SignupController extends GetxController {
         print('SignupController: User ID: ${signupData.user.id}');
         print('SignupController: User Name: ${signupData.user.name}');
 
+        // Save FCM token after successful signup
+        await _saveFcmToken(signupData.token);
+
         // Show success toast
-        _showToast(signupResponse.message.isNotEmpty 
-            ? signupResponse.message 
-            : 'Signup successful', 
-            isError: false);
+        _showToast(
+          signupResponse.message.isNotEmpty
+              ? signupResponse.message
+              : 'Signup successful',
+          isError: false,
+        );
 
         // Update AuthController to reflect logged-in state
         if (Get.isRegistered<AuthController>()) {
@@ -171,6 +179,47 @@ class SignupController extends GetxController {
     } finally {
       _isLoading = false;
       update();
+    }
+  }
+
+  Future<void> _saveFcmToken(String jwtToken) async {
+    try {
+      // Get FCM token from FCMService
+      String? fcmToken;
+      if (Get.isRegistered<FCMService>()) {
+        final fcmService = Get.find<FCMService>();
+        fcmToken = await fcmService.getToken();
+      } else {
+        // If FCMService is not registered, try to get token from shared preferences
+        fcmToken = preferences.getString(SharedPreference.fcmToken);
+      }
+
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        // Determine platform
+        final platform = Platform.isAndroid ? 'android' : 'ios';
+
+        // Save FCM token to API
+        final response = await _fcmApiService.saveFcmToken(
+          jwtToken: jwtToken,
+          token: fcmToken,
+          platform: platform,
+        );
+
+        if (response.success) {
+          print('SignupController: FCM token saved successfully');
+          // Save FCM token to local storage
+          await preferences.putString(SharedPreference.fcmToken, fcmToken);
+        } else {
+          print(
+            'SignupController: Failed to save FCM token: ${response.message}',
+          );
+        }
+      } else {
+        print('SignupController: FCM token not available');
+      }
+    } catch (e) {
+      print('SignupController: Error saving FCM token: $e');
+      // Don't show error to user - FCM token save failure shouldn't block signup
     }
   }
 

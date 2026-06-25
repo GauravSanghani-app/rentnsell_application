@@ -9,6 +9,7 @@ import '../../models/product_model.dart';
 import '../../ui_and_controller/main/notification/notification_screen.dart';
 import '../../ui_and_controller/main/profile/profile_settings_screen.dart';
 import '../../ui_and_controller/main/profile/my_products_screen.dart';
+import '../../ui_and_controller/main/profile/privacy_policy_screen.dart';
 import '../../ui_and_controller/main/edit_product/edit_product_screen.dart';
 import '../../ui_and_controller/startup/onboarding_screen/onboarding_screen.dart';
 import '../../ui_and_controller/startup/splash_screen/splash_screen.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String profileSettings = "/profile-settings";
   static const String myProducts = "/my-products";
   static const String editProduct = "/edit-product";
+  static const String privacyPolicy = "/privacy-policy";
 
   static List<GetPage> pages = [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -62,6 +64,7 @@ class AppRoutes {
     GetPage(name: notification, page: () => const NotificationScreen()),
     GetPage(name: profileSettings, page: () => const ProfileSettingsScreen()),
     GetPage(name: myProducts, page: () => const MyProductsScreen()),
+    GetPage(name: privacyPolicy, page: () => const PrivacyPolicyScreen()),
     GetPage(
       name: editProduct,
       page: () {

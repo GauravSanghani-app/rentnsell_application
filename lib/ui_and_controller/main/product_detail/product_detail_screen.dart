@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../utils/app_const.dart';
 import '../../../utils/theme_manager.dart';
@@ -228,6 +230,53 @@ class ProductDetailScreen extends StatelessWidget {
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Product status (Approved / Under Review)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: product.isReviewed
+                                          ? Colors.green.shade50
+                                          : Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: product.isReviewed
+                                            ? Colors.green.shade400
+                                            : Colors.orange.shade400,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          product.isReviewed
+                                              ? Icons.check_circle_rounded
+                                              : Icons.schedule_rounded,
+                                          size: 18,
+                                          color: product.isReviewed
+                                              ? Colors.green.shade700
+                                              : Colors.orange.shade700,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          product.isReviewed
+                                              ? 'Approved'
+                                              : 'Under Review',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: product.isReviewed
+                                                ? Colors.green.shade800
+                                                : Colors.orange.shade800,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   const SizedBox(height: 12),
                                   Row(
@@ -1643,7 +1692,7 @@ class ProductDetailScreen extends StatelessWidget {
                   IconButton(
                     onPressed: () async {
                       // Check if phone number is valid
-                      if (sellerPhone.isEmpty || 
+                      if (sellerPhone.isEmpty ||
                           sellerPhone == 'Not available' ||
                           !sellerPhone.contains(RegExp(r'[0-9]'))) {
                         context.showErrorToast(
@@ -1654,22 +1703,21 @@ class ProductDetailScreen extends StatelessWidget {
 
                       // Remove any non-digit characters except + for international numbers
                       final phoneNumber = sellerPhone.replaceAll(RegExp(r'[^\d+]'), '');
-                      
-                      // Create tel: URI
                       final uri = Uri.parse('tel:$phoneNumber');
-                      
+
+                      bool launched = false;
                       try {
-                        // Check if device can make phone calls
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        } else {
-                          context.showErrorToast(
-                            message: 'Unable to make phone call. Please check your device settings.',
-                          );
-                        }
-                      } catch (e) {
-                        context.showErrorToast(
-                          message: 'Failed to open phone dialer. Please try again.',
+                        launched = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } catch (_) {}
+
+                      if (!launched && context.mounted) {
+                        _showCallPermissionDialog(
+                          context: context,
+                          phoneNumber: phoneNumber,
+                          displayPhone: sellerPhone,
                         );
                       }
                     },
@@ -1698,4 +1746,43 @@ class ProductDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showCallPermissionDialog({
+  required BuildContext context,
+  required String phoneNumber,
+  required String displayPhone,
+}) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Unable to open dialer'),
+      content: Text(
+        'The app couldn\'t open the phone dialer. You can open app settings to allow permissions, or copy the number to dial manually.\n\n$displayPhone',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text('OK', style: TextStyle(color: Colors.grey.shade700)),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(ctx);
+            await openAppSettings();
+          },
+          child: const Text('Open app settings'),
+        ),
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: phoneNumber));
+            Navigator.pop(ctx);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Phone number copied to clipboard')),
+            );
+          },
+          child: const Text('Copy number'),
+        ),
+      ],
+    ),
+  );
 }

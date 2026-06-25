@@ -222,11 +222,16 @@ class HomeScreen extends StatelessWidget {
                                 hintStyle: textStyleBody.copyWith(
                                   color: colorGrey,
                                   fontSize: 13,
+                                  height: 1.2,
                                 ),
                                 prefixIcon: Icon(
                                   Icons.search_rounded,
                                   color: colorGrey,
-                                  size: 18,
+                                  size: 20,
+                                ),
+                                prefixIconConstraints: const BoxConstraints(
+                                  minWidth: 40,
+                                  minHeight: 0,
                                 ),
                                 suffixIcon:
                                     controller.searchController.text.isNotEmpty
@@ -246,10 +251,14 @@ class HomeScreen extends StatelessWidget {
                                         constraints: const BoxConstraints(),
                                       )
                                     : null,
+                                suffixIconConstraints: const BoxConstraints(
+                                  minWidth: 36,
+                                  minHeight: 0,
+                                ),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
+                                  horizontal: 12,
+                                  vertical: 10,
                                 ),
                                 isDense: true,
                               ),
@@ -466,7 +475,7 @@ class HomeScreen extends StatelessWidget {
       onTap: () {
         Get.toNamed(
           AppRoutes.productDetail,
-          arguments: {'productId': product.id},
+          arguments: {'productId': product.id, 'productData': product.toJson()},
         );
       },
       child: Container(
@@ -704,36 +713,6 @@ class HomeScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (product.distance != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorMainTheme.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.navigation_rounded,
-                                  size: 10,
-                                  color: colorMainTheme,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '${product.distance!.toStringAsFixed(1)} km',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: colorMainTheme,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                       ],
                     ),
                   ],

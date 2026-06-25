@@ -377,7 +377,25 @@ class EditProductController extends GetxController {
       );
 
       if (images.isNotEmpty) {
-        _newImages.addAll(images.map((e) => File(e.path)).toList());
+        final newFiles = images.map((e) => File(e.path)).toList();
+        final totalAfterAdd = _existingImageUrls.length + _newImages.length + newFiles.length;
+
+        if (totalAfterAdd > 5) {
+          Fluttertoast.showToast(
+            msg: 'You can upload a maximum of 5 photos.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red.shade700,
+            textColor: Colors.white,
+          );
+
+          final remaining = 5 - _existingImageUrls.length - _newImages.length;
+          if (remaining > 0) {
+            _newImages.addAll(newFiles.take(remaining));
+          }
+        } else {
+          _newImages.addAll(newFiles);
+        }
         update();
       }
     } catch (e) {
@@ -404,6 +422,17 @@ class EditProductController extends GetxController {
       );
 
       if (image != null) {
+        final totalImages = _existingImageUrls.length + _newImages.length;
+        if (totalImages >= 5) {
+          Fluttertoast.showToast(
+            msg: 'You can upload a maximum of 5 photos.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red.shade700,
+            textColor: Colors.white,
+          );
+          return;
+        }
         _newImages.add(File(image.path));
         update();
       }
@@ -604,9 +633,13 @@ class EditProductController extends GetxController {
       firstErrorField ??= 'coordinates';
     }
 
-    // Validate at least one image exists (existing or new)
-    if (_existingImageUrls.isEmpty && _newImages.isEmpty) {
-      _fieldErrors['images'] = 'Please select at least one image';
+    // Validate images: at least 1 and at most 5 (existing + new)
+    final totalImages = _existingImageUrls.length + _newImages.length;
+    if (totalImages == 0) {
+      _fieldErrors['images'] = 'Please select at least one photo';
+      firstErrorField ??= 'images';
+    } else if (totalImages > 5) {
+      _fieldErrors['images'] = 'You can upload a maximum of 5 photos';
       firstErrorField ??= 'images';
     }
 
@@ -743,8 +776,8 @@ class EditProductController extends GetxController {
 
       if (response.success) {
         Fluttertoast.showToast(
-          msg: 'Product updated successfully!',
-          toastLength: Toast.LENGTH_SHORT,
+          msg: 'Product updated successfully! Your product will be listed for sale or rent after successful review.',
+          toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.green.shade700,
           textColor: Colors.white,

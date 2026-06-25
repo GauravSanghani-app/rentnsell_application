@@ -9,6 +9,8 @@ import '../../../utils/extension.dart';
 import '../widgets/login_bottom_sheet.dart';
 import '../../auth/auth_controller.dart';
 import '../../main/profile/profile_controller.dart';
+import '../home/home_controller.dart';
+import '../wishlist/wishlist_controller.dart';
 
 class ProductDetailController extends GetxController {
   final String productId;
@@ -166,6 +168,9 @@ class ProductDetailController extends GetxController {
     );
     update();
 
+    // Sync wishlist state with other screens (Home & Wishlist)
+    _syncWishlistStatusAcrossScreens(newWishlistStatus);
+
     // Call API in background
     try {
       final jwtToken = preferences.getString(SharedPreference.jwtToken) ?? '';
@@ -241,6 +246,34 @@ class ProductDetailController extends GetxController {
       final context = Get.context;
       if (context != null) {
         context.showErrorToast(message: 'Failed to update wishlist');
+      }
+    }
+  }
+
+  void _syncWishlistStatusAcrossScreens(bool isWishlisted) {
+    if (_product == null) return;
+    final productId = _product!.id;
+
+    // Update Home screen product list
+    if (Get.isRegistered<HomeController>()) {
+      try {
+        final homeController = Get.find<HomeController>();
+        homeController.updateWishlistStatus(productId, isWishlisted);
+      } catch (_) {
+        // Ignore sync errors
+      }
+    }
+
+    // Update Wishlist screen
+    if (Get.isRegistered<WishlistController>()) {
+      try {
+        final wishlistController = Get.find<WishlistController>();
+        wishlistController.handleExternalWishlistChange(
+          productId,
+          isWishlisted,
+        );
+      } catch (_) {
+        // Ignore sync errors
       }
     }
   }

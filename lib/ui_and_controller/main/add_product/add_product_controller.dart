@@ -297,7 +297,24 @@ class AddProductController extends GetxController {
       );
 
       if (images.isNotEmpty) {
-        _selectedImages.addAll(images.map((e) => File(e.path)).toList());
+        final newFiles = images.map((e) => File(e.path)).toList();
+        // Enforce max 5 photos
+        if (_selectedImages.length + newFiles.length > 5) {
+          Fluttertoast.showToast(
+            msg: 'You can upload a maximum of 5 photos.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red.shade700,
+            textColor: Colors.white,
+          );
+          // Only add up to the remaining allowed slots
+          final remaining = 5 - _selectedImages.length;
+          if (remaining > 0) {
+            _selectedImages.addAll(newFiles.take(remaining));
+          }
+        } else {
+          _selectedImages.addAll(newFiles);
+        }
         update();
       }
     } catch (e) {
@@ -324,6 +341,16 @@ class AddProductController extends GetxController {
       );
 
       if (image != null) {
+        if (_selectedImages.length >= 5) {
+          Fluttertoast.showToast(
+            msg: 'You can upload a maximum of 5 photos.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red.shade700,
+            textColor: Colors.white,
+          );
+          return;
+        }
         _selectedImages.add(File(image.path));
         update();
       }
@@ -437,7 +464,10 @@ class AddProductController extends GetxController {
 
     // Validate images
     if (_selectedImages.isEmpty) {
-      _fieldErrors['images'] = 'Please select at least one image';
+      _fieldErrors['images'] = 'Please select at least one photo';
+      if (firstErrorField == null) firstErrorField = 'images';
+    } else if (_selectedImages.length > 5) {
+      _fieldErrors['images'] = 'You can upload a maximum of 5 photos';
       if (firstErrorField == null) firstErrorField = 'images';
     }
 
@@ -578,8 +608,8 @@ class AddProductController extends GetxController {
 
       if (response.success) {
         Fluttertoast.showToast(
-          msg: 'Product added successfully!',
-          toastLength: Toast.LENGTH_SHORT,
+          msg: 'Product added successfully! Your product will be listed for sale or rent after successful review.',
+          toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.green.shade700,
           textColor: Colors.white,

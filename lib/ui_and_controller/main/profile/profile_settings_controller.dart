@@ -90,7 +90,7 @@ class ProfileSettingsController extends GetxController {
 
     _isLoadingProfile = true;
     _isLoading = true;
-    update();
+    update(['profile_settings']);
 
     try {
       final jwtToken = preferences.getString(SharedPreference.jwtToken);
@@ -170,7 +170,7 @@ class ProfileSettingsController extends GetxController {
 
       if (image != null) {
         _selectedImagePath = image.path;
-        update();
+        update(['profile_settings']);
         return image.path;
       }
       return null;
@@ -215,28 +215,28 @@ class ProfileSettingsController extends GetxController {
 
   void setCountryCode(String code) {
     _countryCode = code;
-    update();
+    update(['profile_settings']);
   }
 
   void setPhone(String phone) {
     _phone = phone;
-    update();
+    update(['profile_settings']);
   }
 
   void setAddress(String address) {
     _address = address;
     addressController.text = address;
-    update();
+    update(['profile_settings']);
   }
 
   void setGender(String gender) {
     _selectedGender = gender;
-    update();
+    update(['profile_settings']);
   }
 
   Future<bool> updateProfile() async {
     _isUpdating = true;
-    update();
+    update(['profile_settings']);
 
     try {
       final jwtToken = preferences.getString(SharedPreference.jwtToken);
@@ -346,7 +346,7 @@ class ProfileSettingsController extends GetxController {
       return false;
     } finally {
       _isUpdating = false;
-      update();
+      update(['profile_settings']);
     }
   }
 
